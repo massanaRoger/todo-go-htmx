@@ -1,0 +1,41 @@
+package templates
+
+import "github.com/massanaRoger/todo-go-htmx/internal/model"
+import "fmt"
+
+templ Todo(todo model.Todo) {
+	<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
+		<input
+			type="checkbox"
+			hx-vals={ fmt.Sprintf("js:{id: %d, checked: %t}", todo.ID, false) }
+			hx-target={ fmt.Sprintf("#todo-item-%d", todo.ID) }
+			hx-post="/check-todo"
+		/>
+		<li class="list-none">{ todo.Title }</li>
+	</span>
+}
+
+templ CheckTodo(todo model.Todo, checked bool) {
+	if checked == true {
+		<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
+			<input
+				type="checkbox"
+				hx-vals={ fmt.Sprintf("js:{id: %d, checked: %t}", todo.ID, !checked) }
+				hx-target={ fmt.Sprintf("#todo-item-%d", todo.ID) }
+				hx-post="/check-todo"
+			/>
+			<li class="list-none">{ todo.Title }</li>
+		</span>
+	} else {
+		<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
+			<input
+				type="checkbox"
+				checked
+				hx-vals={ fmt.Sprintf("js:{id: %d, checked: %t}", todo.ID, !checked) }
+				hx-target={ fmt.Sprintf("#todo-item-%d", todo.ID) }
+				hx-post="/check-todo"
+			/>
+			<li class="line-through list-none text-gray-500">{ todo.Title }</li>
+		</span>
+	}
+}
