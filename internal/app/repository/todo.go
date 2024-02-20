@@ -23,6 +23,13 @@ func NewInMemoryTodoRepository() *InMemoryTodoRepository {
 }
 
 func (r *InMemoryTodoRepository) Add(todo model.Todo) (model.Todo, error) {
+	for i, t := range r.todos {
+		if t.ID == todo.ID {
+			r.todos[i] = todo
+			return todo, nil
+		}
+	}
+
 	r.todos = append(r.todos, todo)
 	return todo, nil
 }

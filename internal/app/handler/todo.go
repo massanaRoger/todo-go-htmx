@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"strconv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/massanaRoger/todo-go-htmx/internal/app/service"
 	"github.com/massanaRoger/todo-go-htmx/internal/app/templates"
@@ -46,4 +48,35 @@ func (h *TodoHandler) CheckTodo(c echo.Context) error {
 		return err
 	}
 	return util.Render(c, 200, templates.CheckTodo(todo, todoToCheck.Checked))
+}
+
+func (h *TodoHandler) StartEditTodo(c echo.Context) error {
+	qp := c.QueryParam("id")
+	id, err := strconv.Atoi(qp)
+	if err != nil {
+		return err
+	}
+	todo, err := h.service.GetTodo(id)
+	if err != nil {
+		return err
+	}
+	return util.Render(c, 200, templates.StartEditTodo(todo))
+}
+
+func (h *TodoHandler) EditTodo(c echo.Context) error {
+	var editTodo model.EditTodo
+	if err := c.Bind(&editTodo); err != nil {
+		return err
+	}
+	todo, err := h.service.GetTodo(editTodo.ID)
+	if err != nil {
+		return err
+	}
+	todo.Title = editTodo.Value
+	editedTodo, err := h.service.AddTodo(todo)
+	if err != nil {
+		return err
+	}
+
+	return util.Render(c, 200, templates.EditTodo(editedTodo))
 }

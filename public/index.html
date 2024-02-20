@@ -2,21 +2,27 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="dist/styles.css"></link>
-  <title>Document</title>
-  <script defer src="js/htmx.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="dist/styles.css">
+    </link>
+    <title>Document</title>
+    <script defer src="js/htmx.min.js"></script>
 </head>
 
 <body class="bg-[#eee]">
-  <div class="text-center flex flex-col items-center">
-    <h1 class="text-2xl font-bold mb-4">Todo App</h1>
-    <input hx-post="/add-todo" hx-on::after-request="this.value = ''" hx-trigger="keyup[keyCode==13]" hx-swap="afterend" hx-target="#todo-result" class="bg-white flex flex-col align-center items-center w-[40%] h-[50px] border" name="title" type="text"></input>
-    <div>
-        <ul class="list-none" id="todo-result"></ul>
+    <div class="text-center flex flex-col items-center">
+        <h1 class="text-2xl font-bold mb-4">Todo App</h1>
+        <div class="bg-white w-[40%] h-[50px]">
+            <input hx-post="/add-todo" hx-on::after-request="this.value = ''" hx-trigger="keyup[keyCode==13]"
+                hx-swap="afterend" hx-target="#todo-result"
+                class="flex flex-col align-center w-full h-full items-center border" name="title" type="text">
+            </input>
+            <div>
+                <ul class="list-none" id="todo-result"></ul>
+            </div>
+        </div>
     </div>
-  </div>
 </body>
 
 </html>
