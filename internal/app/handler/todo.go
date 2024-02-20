@@ -47,7 +47,12 @@ func (h *TodoHandler) CheckTodo(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return util.Render(c, 200, templates.CheckTodo(todo, todoToCheck.Checked))
+	todo.Done = !todo.Done
+	addedTodo, err := h.service.AddTodo(todo)
+	if err != nil {
+		return err
+	}
+	return util.Render(c, 200, templates.CheckTodo(addedTodo))
 }
 
 func (h *TodoHandler) StartEditTodo(c echo.Context) error {

@@ -7,8 +7,7 @@ type Todo struct {
 }
 
 type CheckTodo struct {
-	Checked bool `form:"checked"`
-	ID      int  `form:"id"`
+	ID int `form:"id"`
 }
 
 type EditTodo struct {
