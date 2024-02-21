@@ -15,3 +15,7 @@ type EditTodo struct {
 	PrevValue string `form:"prevValue"`
 	NewValue  string `form:"newValue"`
 }
+
+type RemoveTodo struct {
+	ID int `form:"id"`
+}

@@ -4,8 +4,8 @@ import "github.com/massanaRoger/todo-go-htmx/internal/model"
 import "fmt"
 
 templ Todo(todo model.Todo) {
-	<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
-		<div class="flex gap-2 justify-center items-center w-full">
+	<span class="flex flex-gap-2">
+		<div class="flex gap-2 justify-center items-center w-full" id={ fmt.Sprintf("todo-item-%d", todo.ID) }>
 			@checkButton(todo.ID, false)
 			@editInput(todo, "list-none relative")
 		</div>
@@ -14,33 +14,15 @@ templ Todo(todo model.Todo) {
 
 templ CheckTodo(todo model.Todo) {
 	if todo.Done == false {
-		<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
-			<div class="flex gap-2 justify-center items-center w-full">
-				@checkButton(todo.ID, todo.Done)
-				<li
-					class="list-none relative"
-					hx-get="/start-edit-todo"
-					hx-vals={ fmt.Sprintf("js:{id: %d}", todo.ID) }
-					hx-trigger="dblclick"
-					hx-swap="outerHTML"
-				>{ todo.Title }</li>
-			</div>
-		</span>
+		<div id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex gap-2 justify-center items-center w-full">
+			@checkButton(todo.ID, todo.Done)
+			@editInput(todo, "list-none relative")
+		</div>
 	} else {
-		<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
-			<div class="flex gap-2 justify-center items-center w-full">
-				@checkButton(todo.ID, todo.Done)
-				<li
-					class="line-through list-none text-gray-500 relative"
-					hx-vals={ fmt.Sprintf("js:{id: %d}", todo.ID) }
-					hx-get="/start-edit-todo"
-					hx-trigger="dblclick"
-					hx-swap="outerHTML"
-				>
-					{ todo.Title }
-				</li>
-			</div>
-		</span>
+		<div id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex gap-2 justify-center items-center w-full">
+			@checkButton(todo.ID, todo.Done)
+			@editInput(todo, "line-through list-none text-gray-500 relative")
+		</div>
 	}
 }
 
@@ -76,13 +58,20 @@ templ editInput(todo model.Todo, classes string) {
 	>
 		<p class="w-full relative">
 			{ todo.Title }
-			@deleteButton()
+			@deleteButton(todo.ID)
 		</p>
 	</li>
 }
 
-templ deleteButton() {
-	<button class="absolute top-0 bottom-0 right-3">X</button>
+templ deleteButton(id int) {
+	<button
+		class="absolute top-0 bottom-0 right-3 text-black"
+		hx-post="/remove-todo"
+		hx-trigger="click"
+		hx-swap="outerHTML"
+		hx-target={ fmt.Sprintf("#todo-item-%d", id) }
+		hx-vals={ fmt.Sprintf(`js:{id: %d}`, id) }
+	>X</button>
 }
 
 templ checkButton(id int, checked bool) {

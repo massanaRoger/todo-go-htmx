@@ -11,6 +11,7 @@ type TodoRepository interface {
 	Add(todo model.Todo) (model.Todo, error)
 	Get() ([]model.Todo, error)
 	GetById(id int) (model.Todo, error)
+	RemoveTodo(id int) error
 }
 
 // InMemoryTodoRepository in-memory repo implementation.
@@ -45,4 +46,14 @@ func (r *InMemoryTodoRepository) GetById(id int) (model.Todo, error) {
 		}
 	}
 	return r.todos[0], errors.New("ID not found")
+}
+
+func (r *InMemoryTodoRepository) RemoveTodo(id int) error {
+	for i, item := range r.todos {
+		if item.ID == id {
+			r.todos = append(r.todos[:i], r.todos[i+1:]...)
+			return nil
+		}
+	}
+	return errors.New("Todo to remove not found")
 }

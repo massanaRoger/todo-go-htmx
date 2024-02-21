@@ -14,8 +14,11 @@ func main() {
 	todoService := service.NewTodoService(todoRepo)
 	todoHandler := handler.NewTodoHandler(todoService)
 	e.GET("/start-edit-todo", todoHandler.StartEditTodo)
+
 	e.POST("/add-todo", todoHandler.AddTodo)
 	e.POST("/check-todo", todoHandler.CheckTodo)
+	e.POST("/remove-todo", todoHandler.RemoveTodo)
+
 	e.PUT("/edit-todo", todoHandler.EditTodo)
 
 	e.Logger.Fatal(e.Start(":1323"))

@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -99,6 +100,21 @@ func (h *TodoHandler) EditTodo(c echo.Context) error {
 	}
 
 	return util.Render(c, 200, templates.EditTodo(editedTodo))
+}
+
+func (h *TodoHandler) RemoveTodo(c echo.Context) error {
+	var removeTodo model.RemoveTodo
+	if err := c.Bind(&removeTodo); err != nil {
+		return err
+	}
+
+	err := h.service.RemoveTodo(removeTodo.ID)
+
+	if err != nil {
+		return err
+	}
+
+	return c.HTML(http.StatusOK, "")
 }
 
 func (h *TodoHandler) whatTrigger(c echo.Context) (string, error) {

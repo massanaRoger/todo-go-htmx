@@ -25,3 +25,7 @@ func (s *TodoService) GetTodos() ([]model.Todo, error) {
 func (s *TodoService) GetTodo(id int) (model.Todo, error) {
 	return s.repo.GetById(id)
 }
+
+func (s *TodoService) RemoveTodo(id int) error {
+	return s.repo.RemoveTodo(id)
+}
