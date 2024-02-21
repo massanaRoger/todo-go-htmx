@@ -11,6 +11,7 @@ type CheckTodo struct {
 }
 
 type EditTodo struct {
-	ID    int    `form:"id"`
-	Value string `form:"value"`
+	ID        int    `form:"id"`
+	PrevValue string `form:"prevValue"`
+	NewValue  string `form:"newValue"`
 }

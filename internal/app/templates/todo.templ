@@ -5,18 +5,9 @@ import "fmt"
 
 templ Todo(todo model.Todo) {
 	<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
-		<div class="flex gap-2 justify-center items-center">
+		<div class="flex gap-2 justify-center items-center w-full">
 			@checkButton(todo.ID, false)
-			<li
-				class="list-none relative"
-				hx-vals={ fmt.Sprintf("js:{id: %d}", todo.ID) }
-				hx-swap="outerHTML"
-				hx-trigger="dblclick"
-				hx-get="/start-edit-todo"
-			>
-				{ todo.Title }
-				@deleteButton()
-			</li>
+			@editInput(todo, "list-none relative")
 		</div>
 	</span>
 }
@@ -24,7 +15,7 @@ templ Todo(todo model.Todo) {
 templ CheckTodo(todo model.Todo) {
 	if todo.Done == false {
 		<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
-			<div class="flex gap-2 justify-center items-center">
+			<div class="flex gap-2 justify-center items-center w-full">
 				@checkButton(todo.ID, todo.Done)
 				<li
 					class="list-none relative"
@@ -37,7 +28,7 @@ templ CheckTodo(todo model.Todo) {
 		</span>
 	} else {
 		<span id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex flex-gap-2">
-			<div class="flex gap-2 justify-center items-center">
+			<div class="flex gap-2 justify-center items-center w-full">
 				@checkButton(todo.ID, todo.Done)
 				<li
 					class="line-through list-none text-gray-500 relative"
@@ -55,45 +46,48 @@ templ CheckTodo(todo model.Todo) {
 
 templ StartEditTodo(todo model.Todo) {
 	<input
+		hx-ext="event-header"
 		autofocus
 		type="text w-full h-[30px]"
 		value={ todo.Title }
 		hx-put="/edit-todo"
 		onfocus="var temp_value=this.value; this.value=''; this.value=temp_value"
 		hx-swap="outerHTML"
-		hx-vals={ fmt.Sprintf("js:{id:%d, value: event.target.value}", todo.ID) }
+		hx-trigger="blur, keyup[keyCode==13]"
+		hx-vals={ fmt.Sprintf(`js:{id:%d, newValue:event.target.value,
+    prevValue:'%s'}`,todo.ID,todo.Title) }
 	/>
 }
 
 templ EditTodo(todo model.Todo) {
 	if todo.Done == false {
-		<li
-			class="list-none relative"
-			hx-get="/start-edit-todo"
-			hx-vals={ fmt.Sprintf("js:{id: %d}", todo.ID) }
-			hx-trigger="dblclick"
-		>
-			{ todo.Title }
-		</li>
+		@editInput(todo, "list-none relative")
 	} else {
-		<li
-			class="line-through relative list-none text-gray-500"
-			hx-vals={ fmt.Sprintf("js:{id: %d}", todo.ID) }
-			hx-get="/start-edit-todo"
-			hx-trigger="dblclick"
-		>
-			{ todo.Title }
-		</li>
+		@editInput(todo, "line-through relative list-none text-gray-500")
 	}
 }
 
+templ editInput(todo model.Todo, classes string) {
+	<li
+		class={ classes + " w-full text-left" }
+		hx-vals={ fmt.Sprintf("js:{id: %d}", todo.ID) }
+		hx-get="/start-edit-todo"
+		hx-trigger="dblclick"
+	>
+		<p class="w-full relative">
+			{ todo.Title }
+			@deleteButton()
+		</p>
+	</li>
+}
+
 templ deleteButton() {
-	<button class="absolute top-0 bottom-0 right-3 left-0">X</button>
+	<button class="absolute top-0 bottom-0 right-3">X</button>
 }
 
 templ checkButton(id int, checked bool) {
 	<div class="inline-flex items-center">
-		<label class="relative flex items-center p-3 rounded-full cursor-pointer" htmlFor="customStyle">
+		<label class="relative flex items-center p-3 rounded-full cursor-pointer w-full" htmlFor="customStyle">
 			<input
 				type="checkbox"
 				class="before:content[''] peer relative h-8 w-8 cursor-pointer appearance-none rounded-full border border-gray-900/20 bg-gray-900/10 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-gray-900 checked:bg-gray-900 checked:before:bg-gray-900 hover:scale-105 hover:before:opacity-0"

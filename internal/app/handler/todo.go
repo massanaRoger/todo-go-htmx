@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/json"
+	"errors"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -77,11 +79,43 @@ func (h *TodoHandler) EditTodo(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	todo.Title = editTodo.Value
+
+	trigger, err := h.whatTrigger(c)
+	if err != nil {
+		return err
+	}
+
+	if trigger == "blur" {
+		todo.Title = editTodo.PrevValue
+	} else if trigger == "keyup" {
+		todo.Title = editTodo.NewValue
+	} else {
+		return errors.New("Unknown trigger")
+	}
+
 	editedTodo, err := h.service.AddTodo(todo)
 	if err != nil {
 		return err
 	}
 
 	return util.Render(c, 200, templates.EditTodo(editedTodo))
+}
+
+func (h *TodoHandler) whatTrigger(c echo.Context) (string, error) {
+	headers := c.Request().Header
+	header := headers.Get("Triggering-Event")
+	var eventData map[string]interface{}
+	if err := json.Unmarshal([]byte(header), &eventData); err != nil {
+		return "", err
+	}
+
+	if htmxInternalData, ok := eventData["htmx-internal-data"].(map[string]interface{}); ok {
+		if triggerSpec, ok := htmxInternalData["triggerSpec"].(map[string]interface{}); ok {
+			if trigger, ok := triggerSpec["trigger"].(string); ok {
+				return trigger, nil
+			}
+		}
+	}
+
+	return "", errors.New("Trigger not found")
 }
