@@ -1,9 +1,9 @@
 package templates
 
-import "github.com/massanaRoger/todo-go-htmx/internal/model"
 import "fmt"
+import "github.com/massanaRoger/todo-go-htmx/db"
 
-templ Todo(todo model.Todo) {
+templ Todo(todo db.Todo) {
 	<span class="flex flex-gap-2">
 		<div class="flex gap-2 justify-center items-center w-full" id={ fmt.Sprintf("todo-item-%d", todo.ID) }>
 			@checkButton(todo.ID, false)
@@ -12,7 +12,18 @@ templ Todo(todo model.Todo) {
 	</span>
 }
 
-templ CheckTodo(todo model.Todo) {
+templ AllTodos(todos []db.Todo) { for _, todo := range todos {
+	<span class="flex flex-gap-2">
+		<div class="flex gap-2 justify-center items-center w-full" id={ fmt.Sprintf("todo-item-%d", todo.ID) }>
+			@checkButton(todo.ID, todo.Done)
+			@editInput(todo, "list-none relative")
+		</div>
+	</span>
+}
+
+}
+
+templ CheckTodo(todo db.Todo) {
 	if todo.Done == false {
 		<div id={ fmt.Sprintf("todo-item-%d", todo.ID) } class="flex gap-2 justify-center items-center w-full">
 			@checkButton(todo.ID, todo.Done)
@@ -26,7 +37,7 @@ templ CheckTodo(todo model.Todo) {
 	}
 }
 
-templ StartEditTodo(todo model.Todo) {
+templ StartEditTodo(todo db.Todo) {
 	<input
 		hx-ext="event-header"
 		autofocus
@@ -41,7 +52,7 @@ templ StartEditTodo(todo model.Todo) {
 	/>
 }
 
-templ EditTodo(todo model.Todo) {
+templ EditTodo(todo db.Todo) {
 	if todo.Done == false {
 		@editInput(todo, "list-none relative")
 	} else {
@@ -49,12 +60,13 @@ templ EditTodo(todo model.Todo) {
 	}
 }
 
-templ editInput(todo model.Todo, classes string) {
+templ editInput(todo db.Todo, classes string) {
 	<li
 		class={ classes + " w-full text-left" }
 		hx-vals={ fmt.Sprintf("js:{id: %d}", todo.ID) }
 		hx-get="/start-edit-todo"
 		hx-trigger="dblclick"
+		hx-swap="outerHTML"
 	>
 		<p class="w-full relative">
 			{ todo.Title }
@@ -63,7 +75,7 @@ templ editInput(todo model.Todo, classes string) {
 	</li>
 }
 
-templ deleteButton(id int) {
+templ deleteButton(id int32) {
 	<button
 		class="absolute top-0 bottom-0 right-3 text-black"
 		hx-post="/remove-todo"
@@ -74,13 +86,13 @@ templ deleteButton(id int) {
 	>X</button>
 }
 
-templ checkButton(id int, checked bool) {
+templ checkButton(id int32, checked bool) {
 	<div class="inline-flex items-center">
 		<label class="relative flex items-center p-3 rounded-full cursor-pointer w-full" htmlFor="customStyle">
 			<input
 				type="checkbox"
 				class="before:content[''] peer relative h-8 w-8 cursor-pointer appearance-none rounded-full border border-gray-900/20 bg-gray-900/10 transition-all before:absolute before:top-2/4 before:left-2/4 before:block before:h-12 before:w-12 before:-translate-y-2/4 before:-translate-x-2/4 before:rounded-full before:bg-blue-gray-500 before:opacity-0 before:transition-opacity checked:border-gray-900 checked:bg-gray-900 checked:before:bg-gray-900 hover:scale-105 hover:before:opacity-0"
-				id="customStyle"
+				id={ "checkbox-" + string(id) }
 				hx-vals={ fmt.Sprintf("js:{id: %d}", id) }
 				hx-target={ fmt.Sprintf("#todo-item-%d", id) }
 				hx-post="/check-todo"

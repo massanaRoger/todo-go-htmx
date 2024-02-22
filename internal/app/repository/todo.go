@@ -1,59 +1,66 @@
 package repository
 
 import (
-	"errors"
+	"context"
 
-	"github.com/massanaRoger/todo-go-htmx/internal/model"
+	"github.com/jackc/pgx/v5"
+	"github.com/massanaRoger/todo-go-htmx/db"
 )
 
-// TodoRepository interface for the todo storage.
 type TodoRepository interface {
-	Add(todo model.Todo) (model.Todo, error)
-	Get() ([]model.Todo, error)
-	GetById(id int) (model.Todo, error)
-	RemoveTodo(id int) error
+	Add(todo db.Todo) (db.Todo, error)
+	Get() ([]db.Todo, error)
+	GetById(id int32) (db.Todo, error)
+	RemoveTodo(id int32) error
+	EditTodo(todo db.Todo) (db.Todo, error)
 }
 
-// InMemoryTodoRepository in-memory repo implementation.
-type InMemoryTodoRepository struct {
-	todos []model.Todo
+type PostgresTodoRepository struct {
+	queries *db.Queries
+	todos   []db.Todo
 }
 
-func NewInMemoryTodoRepository() *InMemoryTodoRepository {
-	return &InMemoryTodoRepository{}
+func NewPostgresTodoRepository(conn *pgx.Conn) *PostgresTodoRepository {
+	queries := db.New(conn)
+	return &PostgresTodoRepository{queries: queries}
 }
 
-func (r *InMemoryTodoRepository) Add(todo model.Todo) (model.Todo, error) {
-	for i, t := range r.todos {
-		if t.ID == todo.ID {
-			r.todos[i] = todo
-			return todo, nil
-		}
+func (r *PostgresTodoRepository) Add(todo db.Todo) (db.Todo, error) {
+	insertedTodo, err := r.queries.CreateTodo(context.Background(), db.CreateTodoParams{
+		Title: todo.Title,
+		Done:  todo.Done,
+	})
+	if err != nil {
+		return db.Todo{}, err
+	}
+	return insertedTodo, nil
+}
+
+func (r *PostgresTodoRepository) Get() ([]db.Todo, error) {
+	todos, err := r.queries.ListTodos(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return todos, nil
+}
+
+func (r *PostgresTodoRepository) GetById(id int32) (db.Todo, error) {
+	todo, err := r.queries.GetTodoByID(context.Background(), id)
+	if err != nil {
+		return db.Todo{}, err
 	}
 
-	r.todos = append(r.todos, todo)
 	return todo, nil
 }
 
-func (r *InMemoryTodoRepository) Get() ([]model.Todo, error) {
-	return r.todos, nil
+func (r *PostgresTodoRepository) RemoveTodo(id int32) error {
+	return r.queries.DeleteTodo(context.Background(), id)
 }
 
-func (r *InMemoryTodoRepository) GetById(id int) (model.Todo, error) {
-	for _, item := range r.todos {
-		if item.ID == id {
-			return item, nil
-		}
-	}
-	return r.todos[0], errors.New("ID not found")
-}
-
-func (r *InMemoryTodoRepository) RemoveTodo(id int) error {
-	for i, item := range r.todos {
-		if item.ID == id {
-			r.todos = append(r.todos[:i], r.todos[i+1:]...)
-			return nil
-		}
-	}
-	return errors.New("Todo to remove not found")
+func (r *PostgresTodoRepository) EditTodo(todo db.Todo) (db.Todo, error) {
+	return r.queries.UpdateTodo(context.Background(), db.UpdateTodoParams{
+		Title: todo.Title,
+		Done:  todo.Done,
+		ID:    todo.ID,
+	})
 }

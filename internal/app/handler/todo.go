@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/massanaRoger/todo-go-htmx/db"
 	"github.com/massanaRoger/todo-go-htmx/internal/app/service"
 	"github.com/massanaRoger/todo-go-htmx/internal/app/templates"
 	"github.com/massanaRoger/todo-go-htmx/internal/app/util"
@@ -22,22 +23,28 @@ func NewTodoHandler(service *service.TodoService) *TodoHandler {
 }
 
 func (h *TodoHandler) AddTodo(c echo.Context) error {
-	var newTodo model.Todo
+	var newTodo model.TodoForm
 	if err := c.Bind(&newTodo); err != nil {
 		return err
 	}
 
-	todos, err := h.service.GetTodos()
-	if err != nil {
-		return err
+	todo := db.Todo{
+		Title: newTodo.Title,
+		Done:  false,
 	}
-	newTodo.ID = len(todos) + 1
-	newTodo.Done = false
-	addedTodo, err := h.service.AddTodo(newTodo)
+	addedTodo, err := h.service.AddTodo(todo)
 	if err != nil {
 		return err
 	}
 	return util.Render(c, 200, templates.Todo(addedTodo))
+}
+
+func (h *TodoHandler) AllTodos(c echo.Context) error {
+	todos, err := h.service.GetTodos()
+	if err != nil {
+		return err
+	}
+	return util.Render(c, 200, templates.AllTodos(todos))
 }
 
 func (h *TodoHandler) CheckTodo(c echo.Context) error {
@@ -50,17 +57,21 @@ func (h *TodoHandler) CheckTodo(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	todo.Done = !todo.Done
-	addedTodo, err := h.service.AddTodo(todo)
+	editedTodo, err := h.service.EditTodo(db.Todo{
+		Done:  !todo.Done,
+		Title: todo.Title,
+		ID:    todoToCheck.ID,
+	})
 	if err != nil {
 		return err
 	}
-	return util.Render(c, 200, templates.CheckTodo(addedTodo))
+	return util.Render(c, 200, templates.CheckTodo(editedTodo))
 }
 
 func (h *TodoHandler) StartEditTodo(c echo.Context) error {
 	qp := c.QueryParam("id")
-	id, err := strconv.Atoi(qp)
+	id_int, err := strconv.Atoi(qp)
+	id := int32(id_int)
 	if err != nil {
 		return err
 	}
@@ -76,15 +87,14 @@ func (h *TodoHandler) EditTodo(c echo.Context) error {
 	if err := c.Bind(&editTodo); err != nil {
 		return err
 	}
-	todo, err := h.service.GetTodo(editTodo.ID)
-	if err != nil {
-		return err
-	}
 
 	trigger, err := h.whatTrigger(c)
 	if err != nil {
 		return err
 	}
+
+	var todo db.Todo
+	todo.ID = editTodo.ID
 
 	if trigger == "blur" {
 		todo.Title = editTodo.PrevValue
@@ -94,7 +104,7 @@ func (h *TodoHandler) EditTodo(c echo.Context) error {
 		return errors.New("Unknown trigger")
 	}
 
-	editedTodo, err := h.service.AddTodo(todo)
+	editedTodo, err := h.service.EditTodo(todo)
 	if err != nil {
 		return err
 	}
